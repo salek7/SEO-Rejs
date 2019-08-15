@@ -1,0 +1,42 @@
+#instalacja & wczytanie potrzebnych bibliotek
+library(RGA)
+authorize()
+library(devtools)
+library(CausalImpact)
+library(tidyverse)
+
+#wyświetlenie listy kont i profili GA
+
+profile <- list_profiles(accountId = "~all", webPropertyId = "~all", start.index = NULL, max.results = NULL)
+view(profile)
+write.csv(profile, file="profile.csv") #funkcja zapisująca wszystkie profile do pliku .csv
+
+id_profilu_ga <- 168710126 #podajemy id profilu GA, z którego będziemy pobierać dane 
+
+#robimy zapytanie o segmenty 
+
+segmenty <- list_segments(start.index = NULL, max.results = NULL)
+view(segmenty)
+
+#robimy zapytania o dane 
+
+Data_przed = "2019-01-01"
+Data_po = "2019-07-10"
+
+#zapytanie o dane
+
+Data6 <- get_ga(id_profilu_ga, start.date = as.Date("2015-06-21"),
+                end.date = as.Date("2019-07-30"), metrics = "ga:sessions", dimensions = "ga:date", 
+                filters = "ga:medium==organic;ga:pagePath!=/")
+
+impact <-  CausalImpact(data = Data6$sessions, pre.period = c(1,1480), 
+                       post.period = c(1481,1501), 
+                       model.args = NULL,
+                       bsts.model = NULL,
+                       post.period.response = NULL,
+                       alpha = 0.05)
+
+plot(impact)
+summary(impact)
+impact$report
+
